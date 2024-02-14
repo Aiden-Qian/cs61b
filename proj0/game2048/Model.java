@@ -1,5 +1,6 @@
 package game2048;
 
+import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Observable;
 
@@ -114,6 +115,40 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
+        board.setViewingPerspective(side);
+        int topsize = board.size();
+        for (int col = 0; col < board.size(); col++) {
+            ArrayList merged_row=new ArrayList();
+            for (int row = board.size() - 2; row >= 0; row--) {
+
+                Tile currentTile = board.tile(col, row);
+
+                if (board.tile(col, row)!= null) {
+                    int zero = 0;
+                    for (int i = 1; i <topsize-row; i++) {
+                        //Tile targetTile = board.tile(col, row+i);
+                        if (board.tile(col, row+i) == null){
+                            board.move(col,row+i,board.tile(col, row+zero));
+                            currentTile = board.tile(col, row+i);
+                            zero=i;
+                            changed = true;
+                        }
+                        else if (board.tile(col, row+i).value() == currentTile.value() && !merged_row.contains(row+i)){
+                            board.move(col,row+i,currentTile);
+                            score += currentTile.value()*2;
+                            merged_row.add(row+i);
+                            changed = true;
+                        }
+                        else{
+                            break;
+                        }
+                    }
+
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
+
         checkGameOver();
         if (changed) {
             setChanged();
@@ -138,6 +173,18 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int col=0;
+        int row;
+        while(col<b.size()) {
+            row = 0;
+            while (row < b.size()) {
+                if (b.tile(col, row) == null) {
+                    return true;
+                }
+                row++;
+            }
+            col++;
+        }
         return false;
     }
 
@@ -148,6 +195,18 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        int col=0;
+        int row;
+        while(col<b.size()) {
+            row = 0;
+            while (row < b.size()) {
+                if ( b.tile(col,row)!= null && b.tile(col,row).value()== MAX_PIECE) {
+                    return true;
+                }
+                row++;
+            }
+            col++;
+        }
         return false;
     }
 
@@ -156,9 +215,51 @@ public class Model extends Observable {
      * There are two ways that there can be valid moves:
      * 1. There is at least one empty space on the board.
      * 2. There are two adjacent tiles with the same value.
+     * 3. Index can't out of bounds.
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if(emptySpaceExists(b)){
+            return true;
+        }
+
+        int col=0;
+        int row;
+        while(col<b.size()) {
+            row = 0;
+            while (row < b.size()) {
+                if (col == 0 && row == 0){
+                    if (b.tile(col,row).value() == b.tile(col+1,row).value() || b.tile(col,row).value() == b.tile(col,row+1).value()){
+                        return true;
+                    }
+                }
+                else if (col == 0 && row == b.size()-1 ){
+                    if (b.tile(col,row).value() == b.tile(col+1,row).value() || b.tile(col,row).value() == b.tile(col,row-1).value()){
+                        return true;
+                    }
+                }
+                else if (col == b.size()-1 && row == 0){
+                    if (b.tile(col,row).value() == b.tile(col-1,row).value() || b.tile(col,row).value() == b.tile(col,row+1).value()){
+                        return true;
+                    }
+                }
+                else if (col == b.size()-1 && row == b.size()-1){
+                    if (b.tile(col,row).value() == b.tile(col-1,row).value() || b.tile(col,row).value() == b.tile(col,row-1).value()){
+                        return true;
+                    }
+                }
+                else if (col < b.size()-1 && col > 0 && row >0 && row < b.size()-1){
+                    if (b.tile(col,row).value() == b.tile(col+1,row).value() ||
+                            b.tile(col,row).value() == b.tile(col-1,row).value() ||
+                            b.tile(col,row).value() == b.tile(col,row+1).value() ||
+                            b.tile(col,row).value() == b.tile(col,row-1).value()){
+                        return true;
+                    }
+                }
+                row++;
+            }
+            col++;
+        }
         return false;
     }
 
